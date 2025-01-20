@@ -97,8 +97,9 @@ usage(void)
 {
 	extern char *__progname;
 
-	fprintf(stderr, "usage: %s [-d] [-s snaplen] [-w delay] "
-	    "-f filename -i interface [-F filter|filter]\n", __progname);
+	fprintf(stderr, "usage: %s [-dpP] [-F expression] [-s snaplen] "
+	    "[-w delay] [-y datalinktype]" "\n"
+	    "\t" "-f filename -i interface [expression]\n", __progname);
 
 	exit(1);
 }
@@ -205,8 +206,10 @@ main(int argc, char *argv[])
 		usage();
 	}
 
-	if (filter != NULL && argc > 0)
+	if (filter != NULL && argc > 0) {
+		warnx("use either -F or extra arguments, not both");
 		usage();
+	}
 
 	signal(SIGPIPE, SIG_IGN);
 
