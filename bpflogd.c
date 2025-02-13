@@ -259,9 +259,30 @@ main(int argc, char *argv[])
 		char *expr = NULL;
 		int i;
 
-		if (filter != NULL)
-			expr = filter;
-		else if (argc == 1)
+		if (filter != NULL) {
+			int fd;
+			ssize_t rv;
+
+			fd = open(filter, O_RDONLY);
+			if (fd == -1)
+				err(1, "%s", filter);
+
+#define BPFLOG_FILTER_MAX	8192
+
+			expr = malloc(BPFLOG_FILTER_MAX);
+			if (expr == NULL)
+				err(1, NULL);
+
+			rv = read(fd, expr, BPFLOG_FILTER_MAX);
+			if (rv == -1)
+				err(1, "%s read", filter);
+			if (rv == 0)
+				errx(1, "%s is empty", filter);
+			if (rv >= BPFLOG_FILTER_MAX - 1)
+				errx(1, "%s is too long", filter);
+
+			close(fd);
+		} else if (argc == 1)
 			expr = argv[0];
 		else {
 			size_t alen = strlen(argv[0]);
@@ -298,12 +319,12 @@ main(int argc, char *argv[])
 		if (ph == NULL)
 			err(1, "pcap_open_dead");
 
-		if (pcap_compile(ph, &bf, expr, 1, 0) == -1)
+		if (pcap_compile(ph, &bf, expr, 1, PCAP_NETMASK_UNKNOWN) == -1)
 			errx(1, "%s", pcap_geterr(ph));
 
 		pcap_close(ph);
 
-		if (argc > 1)
+		if (argc != 1)
 			free(expr);
 	} else {
 		insns[0].k = bd->bd_snaplen;

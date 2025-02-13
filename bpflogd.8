@@ -33,7 +33,7 @@
 .Sh SYNOPSIS
 .Nm bpflogd
 .Op Fl dpP
-.Op Fl F Ar expression
+.Op Fl F Ar filterfile
 .Op Fl s Ar snaplen
 .Op Fl w Ar waitms
 .Op Fl y Ar datalinktype
@@ -60,19 +60,9 @@ permitting
 .Xr newsyslog 8
 to rotate logfiles automatically.
 .Pp
-If the log file contains data after a restart or a
+If the log file contains data when starting or a
 .Dv SIGHUP ,
-new logs are appended to the existing file.
-.Nm
-tries to preserve the integrity of the log file against I/O errors.
-Furthermore, integrity of an existing log file is verified before
-appending.
-.\" If there is an invalid log file or an I/O error, logging is suspended
-.\" until a
-.\" .Dv SIGHUP
-.\" or a
-.\" .Dv SIGALRM
-.\" is received.
+the PCAP header is checked before new logs are appended to the existing file.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
@@ -84,8 +74,8 @@ does not daemonise and logs to the terminal.
 Log output filename.
 The file must already exist, and be readable and writable by the
 _pflogd user.
-.It Fl F Ar expression
-Specify a packet filter expression as per
+.It Fl F Ar filterfile
+Specify a file containing a filter expression as per
 .Xr pcap-filter 5 .
 .It Fl i Ar interface
 Specifies the interface to capture packets on using
@@ -95,7 +85,7 @@ interfaces, but all the interfaces must support the same datalink type.
 .It Fl p
 Do not put the interfaces into promiscuous mode.
 This is the default.
-.It Fl p
+.It Fl P
 Put the interfaces into promiscuous mode.
 .It Fl s Ar snaplen
 Capture at most the first
@@ -114,7 +104,15 @@ value is 2000 milliseconds.
 Specify the datalink type when capturing packets.
 If this is not specified then the default datalink type on the first
 interface is used.
+.It Ar expression
+Specify a filter expression for matching packets as per
+.Xr pcap-filter 5 .
 .El
+.Pp
+A filter expression may only be specified by a file with
+.Ar -F
+or as arguments on the command line, specifying both is unsupported.
+If a filter is not provided then all packets are captured.
 .Sh SEE ALSO
 .Xr pcap_open_live 3 ,
 .Xr pcap-filter 5 ,
